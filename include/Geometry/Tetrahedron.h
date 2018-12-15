@@ -3,7 +3,7 @@
 
 #include "constant.h"
 
-namespace  iMath {
+namespace  WHYSC {
 
 namespace GeometryObject {
 
@@ -48,4 +48,4 @@ private:
 
 } // end of namespace GeometryObject
 
-} // end of namespace iMath
+} // end of namespace WHYSC 

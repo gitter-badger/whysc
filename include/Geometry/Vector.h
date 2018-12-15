@@ -3,7 +3,7 @@
 
 #include <cassert>
 
-namespace  iMath {
+namespace  WHYSC {
 
 namespace GeometryObject {
 
@@ -159,6 +159,6 @@ inline Vector<DIM> operator * (const double & s, const Vector<DIM> & v)
 
 } // end of namespace GeometryObject
 
-} // end of namespace iMath
+} // end of namespace WHYSC
 
 #endif

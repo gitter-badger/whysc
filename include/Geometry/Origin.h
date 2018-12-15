@@ -1,7 +1,7 @@
 #ifndef Origin_h
 #define Origin_h
 
-namespace iMath {
+namespace WHYSC {
 
 namespace GeometryObject{
 
@@ -17,6 +17,6 @@ extern const Null_vector NULL_VECTOR;
 
 } // end of namespace GeometryObject
 
-} // end of namespace iMesh
+} // end of namespace WHYSC
 
 #endif // Origin_h

@@ -2,7 +2,7 @@
 #define Bisection_alg_h
 
 #include <cmath>
-namespace iMath {
+namespace WHYSC {
 
 namespace GeoAlg {
 
@@ -86,5 +86,5 @@ public:
 
 } // end of namespace GeoAlg
 
-} // end of namespace iMath
+} // end of namespace WHYSC
 #endif // end of Bisection_alg_h

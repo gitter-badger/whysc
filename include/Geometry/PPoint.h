@@ -4,7 +4,7 @@
 #include "Geometry/Point.h"
 #include "Geometry/Vector.h"
 
-namespace iMath {
+namespace WHYSC {
 
 namespace GeometryObject {
 
@@ -116,6 +116,6 @@ std::ostream& operator << (std::ostream & os, const PPoint<DIM> & p)
 
 } // end of namespace Mesh
 
-} // end of namespace iMath
+} // end of namespace WHYSC
 
 #endif // end of PPoint_h 

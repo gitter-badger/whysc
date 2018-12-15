@@ -8,7 +8,7 @@
 #include <vector>
 #include <ostream>
 
-namespace iMath {
+namespace WHYSC {
 
 namespace GeoAlg {
 
@@ -54,6 +54,6 @@ private:
 
 } // end of namespace GeoAlg 
 
-} // end of namespace iMath
+} // end of namespace WHYSC
 
 #endif // end of Delaunay_alg_2_h:

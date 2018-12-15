@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <cmath>
 
-namespace iMath {
+namespace WHYSC {
 
 namespace LevelSetFunction {
 
@@ -263,5 +263,5 @@ private:
 
 } // end of namespace LevelSetFunction
 
-} // end of namespace iMath
+} // end of namespace WHYSC
 #endif // end of Level_set_function_h

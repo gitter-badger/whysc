@@ -3,7 +3,7 @@
 
 #include "Vector.h"
 
-namespace  iMath {
+namespace  WHYSC {
 
 namespace GeometryObject {
 
@@ -122,6 +122,6 @@ std::ostream& operator << (std::ostream & os, const Point<DIM> & p)
 
 }// end of namespace GeometryObject
 
-}// end of namesapce iMath
+}// end of namesapce WHYSC 
 
 #endif

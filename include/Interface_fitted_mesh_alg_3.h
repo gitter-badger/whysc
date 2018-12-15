@@ -16,7 +16,7 @@
 #include <cmath>
 
 
-namespace iMath {
+namespace WHYSC {
 
 namespace MeshAlg {
 
@@ -250,7 +250,7 @@ public:
 
 } // end of namespace MeshAlg
 
-} // end of namespace iMath
+} // end of namespace WHYSC
 
 
 #endif // end of Interface_fitted_mesh_alg_3_h

@@ -6,8 +6,7 @@
 
 #include "Geometry/Geometry_kernel.h"
 
-namespace iMath {
-
+namespace WHYSC {
 namespace MeshAlg {
 
 using namespace moab;
@@ -101,6 +100,6 @@ private:
 
 }// end of MeshAlg
 
-} // end of iMath
+} // end of WHYSC 
 
 #endif // end of Structure_mesh_alg_3_h

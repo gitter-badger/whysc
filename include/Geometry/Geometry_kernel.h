@@ -6,7 +6,7 @@
 #include "Delaunay_alg_2.h"
 #include "Level_set_function.h"
 
-namespace iMath {
+namespace WHYSC {
 
 using namespace CGAL;
 
@@ -115,6 +115,6 @@ public:
 
 };
 
-} // end of Geometry_kernel
+} // end of namespace WHYSC 
 
 #endif // end of Geometry_kernel_h

@@ -4,7 +4,7 @@
 
 #include <vector>
 
-namespace iMath {
+namespace WHYSC {
 
 namespace GeometryObject {
 
@@ -45,7 +45,7 @@ private:
     Point minp;
 };
 
-}
-}
+} // end of namespace GeometryObject
+} // end of namespace WHYSC
 
 #endif // end of Box_h

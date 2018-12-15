@@ -7,7 +7,8 @@
 #include <memory>
 #include <cmath>
 
-namespace iMath {
+namespace WHYSC {
+
 namespace fem {
 
 using namespace moab;
@@ -302,6 +303,5 @@ private:
 };
 
 } // end of namespace fem
-
-} // end of namespace iMath
+} // end of namespace WHYSC
 #endif // end of Mesh_h
