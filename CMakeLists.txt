@@ -1,11 +1,15 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 project(WHYSC)
 
 set(CMAKE_BUILD_TYPE Debug)
 set(WHYSC_VERSION_MAJOR 3)
 set(WHYSC_VERSION_MINOR 0)
+set(CMAKE_CXX_STANDARD 14)
 
+
+include_directories(${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR}/include)
+link_directories(${PROJECT_BINARY_DIR}/lib)
 
 # Set path for dependencies
 # TODO: make the code more flexible to find packages 
@@ -52,7 +56,7 @@ find_package(CGAL)
 if(CGAL_FOUND)
     include_directories(${CGAL_INCLUDE_DIRS})
     link_directories(${CGAL_LIBRARIES_DIR})
-    set(CGAL_LIBRARIES "-lCGAL -lCGAL_Core -lgmp -lmpfr")
+    set(CGAL_LIBS "-lCGAL -lCGAL_Core -lgmp -lmpfr")
     set(HAVE_CGAL True)
     message(STATUS "Configure package with cgal!")
 else()
