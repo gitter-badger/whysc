@@ -105,6 +105,7 @@ public:
     typedef GeoAlg::Bisection_alg<GK>  Bisection_algorithm;
     typedef GeoAlg::Delaunay_alg_2<GK> Delaunay_algorithm_2;
 
+    typedef LevelSetFunction::Level_set_function<GK> Level_set_function;
     typedef LevelSetFunction::Circle<GK> Level_set_circle;
     typedef LevelSetFunction::Sphere<GK> Level_set_sphere;
     typedef LevelSetFunction::Signed_distance_circle<GK> Signed_distance_circle;
