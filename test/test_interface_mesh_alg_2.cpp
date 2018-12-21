@@ -4,7 +4,7 @@
 #include <iostream>
 
 typedef WHYSC::Geometry_kernel<> GK;
-typedef WHYSC::MeshAlg::Interface_mesh_alg_2<GK> Interface_mesh_alg_2;
+typedef WHYSC::MeshAlg::Interface_mesh_alg_2 Interface_mesh_alg_2;
 typedef GK::Level_set_circle Level_set_circle;
 
 int main(int argc, char **argv)
@@ -19,11 +19,8 @@ int main(int argc, char **argv)
 
     meshalg.uniform_refine(1);
     meshalg.adaptive_refine(2);
-
-    meshalg.create_ghost();
-    meshalg.create_mesh();
-    //meshalg.create_nodes();
-    
+    meshalg.create_data_structure();
+    meshalg.print();
     meshalg.to_vtk("test");
     meshalg.destroy_forest();
 
