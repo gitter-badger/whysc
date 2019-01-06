@@ -19,11 +19,11 @@ public:
     typedef typename GK::Vector_2 Vector_2;
     typedef typename GK::Vector_3 Vector_3;
 public:
-    double operator () (const Point_2 &p){return 0.0;}
-    int sign(const Point_2 &p) {return 0;}
-    double operator () (const Point_3 &p){return 0.0;}
-    int sign(const Point_3 &p){return 0;}
 
+    virtual double operator () (const Point_2 & p);
+    virtual double operator () (const Point_3 & p);
+    virtual int sign(const Point_2 & p);
+    virtual int sign(const Point_3 & p);
     int sign(const double val)
     {
         int s;
@@ -43,6 +43,7 @@ class Circle: public Level_set_function<GK>
 {
 public:
     typedef typename GK::Point_2 Point_2;
+    typedef typename GK::Point_3 Point_3;
     typedef Level_set_function<GK> Base;
 public:
     /*
@@ -66,7 +67,12 @@ public:
     double operator () (const Point_2 & p)
     {
 
-        return  (p-_center).squared_length() - _r*_r;
+        return  (p[0]-_center[0])*(p[0]-_center[0]) + (p[1]-_center[1])*(p[1]-_center[1]) - _r*_r;
+    }
+
+    double operator () (const Point_3 & p)
+    {
+        return  (p[0]-_center[0])*(p[0]-_center[0]) + (p[1]-_center[1])*(p[1]-_center[1]) - _r*_r;
     }
 
     int sign(const Point_2 & p)
@@ -75,9 +81,10 @@ public:
         return Base::sign(val);
     }
 
-    Point_2 point(const double * p)
+    int sign(const Point_3 & p)
     {
-        return GK::point_2(p);
+        double val = this->operator () (p);
+        return Base::sign(val);
     }
 
 private:

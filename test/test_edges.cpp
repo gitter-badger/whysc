@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <list>
 #include <tuple>
 #include <algorithm>
 #include <iterator>
@@ -34,6 +35,7 @@ int main(int argc, char **argv)
 
     std::array<int, 3> a;
     a = {0, 1, 2};
+
 
     std::copy(a.begin(), a.end(), std::ostream_iterator<int>(std::cout, " "));
 

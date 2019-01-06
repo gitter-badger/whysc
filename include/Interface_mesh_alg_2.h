@@ -10,9 +10,22 @@
 #include <cassert>
 #include <cmath>
 #include <utility>
+#include <sstream>
+#include <fstream>        
 
 #include "Geometry/Geometry_kernel.h"
 #include "p4est_interface.h"
+
+// VTK header 
+#include <vtkUnstructuredGrid.h>
+#include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkXMLPUnstructuredGridWriter.h>
+#include <vtkSmartPointer.h>
+#include <vtkPoints.h>
+#include <vtkQuad.h>
+#include <vtkTriangle.h>
+#include <vtkIntArray.h>
+#include <vtkCellData.h>
 
 
 #define DUMP(a) \
@@ -35,37 +48,58 @@ struct QuadMeshDataStructure
     typedef Geometry_kernel<>  GK;
     typedef typename GK::Point_2 Point_2;
     typedef typename GK::Point_3 Point_3;
+    typedef typename GK::Curve_2 Curve;
     typedef typename GK::Delaunay_algorithm_2 Delaunay_algorithm_2;
     typedef typename GK::Bisection_algorithm Bisection_algorithm;
-    typedef typename GK::Level_set_function Level_set_function;
-
 
     typedef std::array<int, 2> Edge; // the origin edge
     typedef std::array<int, 3> IEdge; // the edge with idx 
     typedef std::array<int, 4> DEdge; // the dual edge
     typedef std::array<int, 4> Neighbor;
-    static std::array<int, 8> localEdge;
-
     typedef std::array<int, 4> Cell;
+    typedef std::array<int, 3> Triangle;
+    typedef std::pair<int, Point_2> CNode; // the cutted node;
+    static std::array<int, 8> localEdge;
     
 
     //data member 
-    std::vector<double> points;
+    std::vector<double> node;
+
     std::vector<Edge> edge;
-    std::vector<DEdge> edge2cell;
+    std::vector<int> edgelevel;
+
     std::vector<Cell> cell;
     std::vector<int> celllevel;
-    std::vector<int> edgelevel;
-    std::vector<double> node;
-    std::map<int, Point_2> edge2cnode;
+
+    std::vector<DEdge> edge2cell;
+    std::vector<std::array<int, 4> > cell2edge;
+
+    std::map<int, CNode> edge2cnode;
+
     std::vector<int> nodesign;
-    std::vector<double> cnode; // the new cutted node
-    int NC;
-    int NN;
-    int NE;
+
+    std::list<Point_2> cnode;
+    std::list<Triangle> tris; // the interface fitted triangles;
+    std::list<Cell> quads;
+
+    int NC; // number of cells
+    int NN; // number of nodes
+    int NE; // number of edges
+
+    int maxlevel; // the current max refine  level
 
     //function member
-    QuadMeshDataStructure(){}
+
+    /*
+     * Construct function
+     */
+    QuadMeshDataStructure()
+    {
+        NC = 0;
+        NN = 0;
+        NE = 0;
+        maxlevel = 0;
+    }
 
     void construct(int nn, int nc, Locidx * ln)
     {
@@ -74,7 +108,8 @@ struct QuadMeshDataStructure
 
         cell.resize(NC);
         for(auto i = 0; i < NC; i++)
-        {
+        {// the p4est the local vertex order is z-order.
+         // Here we change it to counterclockwise order
             cell[i][0] = ln[4*i + 0];
             cell[i][1] = ln[4*i + 1];
             cell[i][2] = ln[4*i + 3];
@@ -82,8 +117,8 @@ struct QuadMeshDataStructure
         }
 
         
-        std::vector<IEdge> totalEdge(4*NC);
         // initialize total edges 
+        std::vector<IEdge> totalEdge(4*NC);
         int k = 0;
         for(auto i = 0; i < NC; i++)
         {
@@ -108,12 +143,13 @@ struct QuadMeshDataStructure
             ++k;
         }
 
-
-        std::cout << std::endl;
+        // sort the `totalEdge`
         auto sort = [](IEdge & e){std::sort(e.begin()+1, e.end());};
         std::for_each(totalEdge.begin(), totalEdge.end(), sort);
         std::sort(totalEdge.begin(), totalEdge.end(), Less);
 
+        // Get the two sets of the unique edge index in `totalEdge`.
+        // 
         std::list<int> i0;
         std::list<int> i1;
         int i = 0;
@@ -141,14 +177,14 @@ struct QuadMeshDataStructure
             i1.push_back(totalEdge[i][0]);
         }
         
-        
-        
         // i0 and i1 should have the same size
         assert(i0.size() == i1.size());
+
+
+        // Get the edge, toplogy realitonship of edge and cell
         NE = i0.size();
         edge2cell.resize(NE);
         edge.resize(NE);
-
         auto it0 = i0.begin();
         auto it1 = i1.begin();
         i = 0;
@@ -162,6 +198,13 @@ struct QuadMeshDataStructure
             auto lidx = edge2cell[i][2]; 
             edge[i][0] = cell[cidx][localEdge[lidx*2 + 0]]; 
             edge[i][1] = cell[cidx][localEdge[lidx*2 + 1]];
+        }
+
+        cell2edge.resize(NC);
+        for(auto i = 0; i < NE; i++)
+        {
+            cell2edge[edge2cell[i][0]][edge2cell[i][2]] = i;
+            cell2edge[edge2cell[i][1]][edge2cell[i][3]] = i;
         }
     }
 
@@ -189,21 +232,22 @@ struct QuadMeshDataStructure
         return (e0[1] == e1[1]) && (e0[2] == e1[2]);
     }
 
-    void compute_node_sign(Level_set_function & fun)
+    void compute_node_sign(Curve  curve)
     {
         nodesign.resize(NN);
         for(int i=0; i < NN; i++)
         {
             Point_2 p(node[3*i + 0], node[3*i + 1]);
-            nodesign[i] = fun.sign(p);
+            double phi = curve(p);
+            nodesign[i] = sign(phi);
         }
     }
 
-    void find_cutted_edge(Level_set_function & fun)
+    void find_cutted_edge(Curve curve)
     {
         // we just consider the finnest edge
         edgelevel.resize(NE);
-        int maxlevel = 0;
+        maxlevel = 0;
         for(auto i = 0; i < NE; i++)
         {
             edgelevel[i] = celllevel[edge2cell[i][0]];
@@ -211,43 +255,64 @@ struct QuadMeshDataStructure
                 maxlevel = edgelevel[i];
         }
 
+        Bisection_algorithm bisection;
+        int k = NN;
         for(auto i = 0; i < NE; i++)
         {
             if(edgelevel[i] == maxlevel && nodesign[edge[i][0]]*nodesign[edge[i][1]] < 0)
             {
                 Point_2 p0(node[3*edge[i][0] + 0], node[3*edge[i][0] + 1]);
                 Point_2 p1(node[3*edge[i][1] + 0], node[3*edge[i][1] + 1]);
-                Point_2 m = bisection(fun, p0, p1);
-                edge2cnode.insert(std::pair<int, Point_2>(i, m));
+                Point_2 m = bisection(curve, p0, p1);
+
+                edge2cnode.insert(std::pair<int, CNode>(i, CNode(k, m)));
+                k++;
+                cnode.push_back(m);
             }
         }
     }
 
-
-    void find_cutted_cell()
+    /*
+     * 
+     */
+    void create_interface_mesh()
     {
+        int i = 0;
+        for(auto & c : cell)
+        {
+            if(celllevel[i] == maxlevel && is_interface_cell(c))
+            {
+                create_triangle(i, c);
+            }
+            else
+                quads.push_back(c);
+            i++;
+        }
     }
 
-    bool is_cutted_cell(int i)
+    bool is_interface_cell(const Cell & c)
     {
         std::array<int, 4> sign = { 
-            nodesign[cell[i][0]],
-            nodesign[cell[i][1]],
-            nodesign[cell[i][2]],
-            nodesign[cell[i][3]]};
+            nodesign[c[0]],
+            nodesign[c[1]],
+            nodesign[c[2]],
+            nodesign[c[3]]
+        };
 
-        int sum = std::abs(sign[0]) + std::abs(sign[1]) + std::abs(sign[2])
-            return (sum < 3) || (sign[0]*sign[1] < 0) ||
-            (sign[1]*sign[2] < 0) || (sign[2]*sign[3] < 0) ||  
-            (sign[3]*sign[0] < 0);
+        int sum = std::abs(sign[0]) + std::abs(sign[1]) 
+            + std::abs(sign[2]) + std::abs(sign[3]);
+        return (sum < 3) || (sign[0]*sign[1] < 0) || (sign[1]*sign[2] < 0) || 
+            (sign[2]*sign[3] < 0) ||  (sign[3]*sign[0] < 0);
     }
 
-    int is_special_elem(Interface * mb, const EntityHandle eh)
+    int is_special_interface_cell(const Cell & c)
     {
-        std::vector<EntityHandle> conn;
-        rval = mb->get_connectivity(&eh, 1, conn, true);
-        int sign[conn.size()]; // conn.size() == 4
-        rval = mb->tag_get_data(vsign, conn.data(), conn.size(), sign);
+        std::array<int, 4> sign = { 
+            nodesign[c[0]],
+            nodesign[c[1]],
+            nodesign[c[2]],
+            nodesign[c[3]]
+        };
         bool flag1 = sign[0] == 0 && sign[2] == 0 && sign[1]*sign[3] < 0;
         bool flag2 = sign[1] == 0 && sign[3] == 0 && sign[0]*sign[2] < 0;
 
@@ -259,17 +324,176 @@ struct QuadMeshDataStructure
             return 0;
     }
 
+    void create_triangle(int i, Cell & c)
+    {
+        std::vector<Point_2> points;
+        std::vector<int> idx;
+        for(auto k = 0; k < 4; k++)
+        {
+            points.push_back(Point_2(node[c[k]*3 + 0], node[c[k]*3 + 1]));
+            idx.push_back(c[k]);
+        }
+
+        int special = is_special_interface_cell(c);
+        if(special > 0)
+        {
+            if(special == 1)
+            {
+                Triangle t0 = {c[1], c[2], c[0]};
+                Triangle t1 = {c[3], c[0], c[2]};
+                tris.push_back(t0);
+                tris.push_back(t1);
+            }
+            else
+            {
+                Triangle t0 = {c[0], c[2], c[3]};
+                Triangle t1 = {c[2], c[3], c[1]};
+                tris.push_back(t0);
+                tris.push_back(t1);
+            }
+        }
+        else
+        {
+            for(auto k = 0; k < 4; k ++)
+            {
+                auto mapit = edge2cnode.find(cell2edge[i][k]);
+                if(mapit != edge2cnode.end())
+                {
+                    points.push_back((mapit->second).second);
+                    idx.push_back((mapit->second).first);
+                }
+            }
+
+            std::vector<int> triangles;
+            Delaunay_algorithm_2 dt; 
+            int nt = dt(points, triangles);
+
+            // Create the triangle entities in moab
+            for(auto k = 0; k < nt; k++)
+            {
+                Triangle t = {
+                    idx[triangles[3*k + 0]], 
+                    idx[triangles[3*k + 1]], 
+                    idx[triangles[3*k + 2]]
+                };
+                tris.push_back(t);
+            }
+
+        }
+    }
+
+    int write_to_vtk(int rank, int nproc, std::ostringstream & fileName)
+    {
+        using vtkPointsP                    = vtkSmartPointer<vtkPoints>;
+        using vtkUnstructuredGridP          = vtkSmartPointer<vtkUnstructuredGrid>;
+        using vtkQuadP                      = vtkSmartPointer<vtkQuad>;
+        using vtkTriangleP                  = vtkSmartPointer<vtkTriangle>;
+        using vtkXMLUnstructuredGridWriterP = vtkSmartPointer<vtkXMLUnstructuredGridWriter>;
+        using vtkIntArrayP                  = vtkSmartPointer<vtkIntArray>;
+
+        auto fname = fileName.str();
+        fileName << "_";
+        fileName.fill('0');
+        fileName.width(4);
+        fileName <<std::right << rank;
+        auto writer = vtkXMLUnstructuredGridWriterP::New();
+        fileName << "." << writer->GetDefaultFileExtension();
+        writer->SetFileName((fileName.str()).c_str());
+        auto dataSet = vtkUnstructuredGridP::New();
+        auto pts = vtkPointsP::New();
+        int np = NN + edge2cnode.size();
+        pts->SetNumberOfPoints(np);
+
+        for(int i = 0; i < NN; i++)
+        {
+            pts->SetPoint(i, node[3*i + 0], node[3*i + 1], node[3*i + 2]);
+        }
+
+        int id = NN;
+        for(const auto & p : cnode)
+        {
+            pts->SetPoint(id, p[0], p[1], 0.0);
+            ++id;
+        }
+
+        vtkQuadP q = vtkQuadP::New();  // Assuming hex elements
+        for(const auto & c : quads)
+        {
+            int num = 0;
+            for(const auto & id : c)
+            {
+                (q->GetPointIds())->SetId(num, id);
+                ++num;
+            }
+            dataSet->InsertNextCell(q->GetCellType(), q->GetPointIds());
+        } 
+
+        vtkTriangleP t = vtkTriangleP::New();
+        for(const auto & c : tris)
+        {
+            int num = 0;
+            for(const auto & id : c)
+            {
+                (t->GetPointIds())->SetId(num, id);
+                ++num;
+            }
+            dataSet->InsertNextCell(t->GetCellType(), t->GetPointIds());
+        }
+        std::vector<int> r(quads.size()+tris.size(), rank);
+        auto mpirank = vtkSmartPointer<vtkIntArray>::New();
+        mpirank->SetName("mpirank");
+        mpirank->SetArray(r.data(), r.size(), 1);
+        dataSet->GetCellData()->AddArray(mpirank);
+    
+        dataSet->SetPoints(pts);
+        // Remove unused memory
+        dataSet->Squeeze();
+        // Write the data
+        writer->SetInputData(dataSet);
+        writer->SetDataModeToBinary();
+        writer->Write();
+
+        if(rank == 0)
+        {
+            std::fstream fs(fname+".pvtu", std::fstream::out);
+            fs << "<?xml version=\"1.0\"?>\n";
+            fs << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" compressor=\"vtkZLibDataCompressor\" byte_order=\"LittleEndian\">\n";
+            fs << "    <PUnstructuredGrid GhostLevel=\"0\">\n";
+            fs << "        <PPoints>\n";
+            fs << "            <PDataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"3\" format=\"binary\"/>\n";
+            fs << "        </PPoints>\n";
+            fs << "        <PCellData Scalars=\"mpirank\">\n";
+            fs << "            <PDataArray type=\"Int32\" Name=\"mpirank\" format=\"binary\"/>\n";
+            fs << "        </PCellData>\n";
+            for(int i = 0; i < nproc; i++)
+            {
+                fs << "    <Piece Source=\"" << fname << "_";
+                fs.fill('0');
+                fs.width(4);
+                fs << std::right << i;
+                fs << ".vtu\"/>\n"; 
+            }
+            fs << "    </PUnstructuredGrid>\n";
+            fs << "</VTKFile>";
+            fs.close();
+        }
+        return 0;
+    }
+
     void print()
     {
+        std::cout << "Begin output datastructure information:" << std::endl;
+        std::cout << "The node: " << std::endl;
         int i = 0;
         for(; i < NN; i++)
         {
             std::cout << i << ": " 
                 << node[3*i+0] << " "
                 << node[3*i+1] << " "
-                << node[3*i+2] << std::endl;
+                << node[3*i+2] << " " << nodesign[i] <<std::endl;
         }
 
+        std::cout << "The cell:" << std::endl;
         i = 0;
         for(; i < NC; i++)
         {
@@ -280,11 +504,14 @@ struct QuadMeshDataStructure
                 << cell[i][3] << " with level " << celllevel[i] << std::endl;
         }
 
+        std::cout << "The edge: " << std::endl;
+        i = 0;
         for(auto & e : edge)
         {
             std::cout << i++ << ": " << e[0] << ", " << e[1] << std::endl;
         }
 
+        std::cout << "The edge to cell relation:" << std::endl;
         i = 0;
         for(auto & e2c : edge2cell)
         {
@@ -292,6 +519,27 @@ struct QuadMeshDataStructure
                 << e2c[0] << ", " << e2c[1] << ", "
                 << e2c[2] << ", " << e2c[3] << std::endl;
 
+        }
+
+        std::cout << "The cell to edge relationship: " << std::endl;
+        i = 0;
+        for(auto & c2e : cell2edge)
+        {
+            std::cout << i++ << ": "
+                << c2e[0] << " "
+                << c2e[1] << " "
+                << c2e[2] << " "
+                << c2e[3] << std::endl;
+        }
+
+        std::cout << "The trinagles: " << std::endl;
+        i = 0;
+        for(auto & t : tris)
+        {
+            std::cout << i++ << ": "
+                << t[0] << ", "
+                << t[1] << ", "
+                << t[2] << std::endl; 
         }
     }
 };
@@ -302,7 +550,10 @@ class Interface_mesh_alg_2
 {
 public:
     typedef Geometry_kernel<>  GK;
-    typedef typename GK::Level_set_function Level_set_function;
+    typedef typename GK::Point_2 Point_2;
+    typedef typename GK::Point_3 Point_3;
+    typedef typename GK::Curve_2 Curve;
+
 public:
     /** Constructor
      *
@@ -311,7 +562,7 @@ public:
      *  
      *
      */
-    Interface_mesh_alg_2(MPI_Comm mpi_comm, Level_set_function & lfun) 
+    Interface_mesh_alg_2(MPI_Comm mpi_comm) 
     {
         comm = mpi_comm;
         conn = NULL;
@@ -319,7 +570,6 @@ public:
         nodes = NULL;
         ghost = NULL;
         mesh = NULL;
-        fun = lfun;
     }
 
     void create_forest_on_rec_domain(double xmin, double xmax, double ymin, double ymax)
@@ -348,17 +598,21 @@ public:
     {
         for(int i = 0; i < n; i++)
             refine(forest, 0, uniform_refine_function, NULL);
+
     }
 
 
     void adaptive_refine(int n)
     {
         for(int i = 0; i < n; i++)
+        {
             refine(forest, 0, adaptive_refine_function, NULL);
-
-        int partforcoarsen = 0;
-        partition(forest, partforcoarsen, NULL);
+            partition(forest, 0, NULL);
+        }
+        balance(forest, P4EST_CONNECT_FULL, NULL);
+        partition(forest, 1, NULL);
     }
+
 
     static int uniform_refine_function(Forest * forest, 
             Topidx which_tree, 
@@ -378,31 +632,41 @@ public:
         auto l = quad->level; // 叶子单元的层数
         auto qx = quad->x; // qx, qy 是逻辑空间中的编号
         auto qy = quad->y; 
-        double p[3] = {0.0, 0.0, 0.0}; // 网格所在的空间为 [0, 1]^2, 从逻辑空间实际空间坐标的转换
+        double p[3] = {0.0, 0.0, 0.0}; // 从逻辑空间实际空间坐标的转换
         auto h = P4EST_QUADRANT_LEN(quad->level); 
-
-        qcoord_to_vertex(forest->connectivity, which_tree, qx, qy, p);
-        phi = sqrt(p[0]*p[0] + p[1]*p[1]) - 0.8;
-        sum += sign(phi);
-
-        qcoord_to_vertex(forest->connectivity, which_tree, qx+h,   qy, p);
-        phi = sqrt(p[0]*p[0] + p[1]*p[1]) - 0.8;
-        sum += sign(phi);
-
-        qcoord_to_vertex(forest->connectivity, which_tree, qx,   qy+h, p);
-        phi = sqrt(p[0]*p[0] + p[1]*p[1]) - 0.8;
-        sum += sign(phi);
-
-        qcoord_to_vertex(forest->connectivity, which_tree, qx+h,   qy+h, p);
-        phi = sqrt(p[0]*p[0] + p[1]*p[1]) - 0.8;
-        sum += sign(phi);
-
+        for(auto i = 0; i < 4; i++)
+        {
+            auto i0 = i/2;
+            auto i1 = i - i0*2;
+            qcoord_to_vertex(forest->connectivity, which_tree, qx + i1*h, qy + i0*h, p);
+            Point_2 pp(p[0], p[1]);
+            phi = curve(pp);
+            sum += sign(phi);
+        }
         if(abs(sum) < 4)
             return 1;
         else 
             return 0;
-    }
 
+//        double x  = 0.0;
+//        double y  = 0.0;
+//        for(auto i = 0; i < 4; i++)
+//        {
+//            auto i0 = i/2;
+//            auto i1 = i - i0*2;
+//            qcoord_to_vertex(forest->connectivity, which_tree, qx + i1*h, qy + i0*h, p);
+//            x += p[0];
+//            y += p[1];
+//        }
+//
+//        Point_2 pp(x/4, y/4);
+//        phi = curve(pp);
+//
+//        if(std::abs(phi) < 0.001)
+//            return 1;
+//        else
+//            return 0;
+    }
 
 
     void create_data_structure()
@@ -462,6 +726,24 @@ public:
     }
 
 
+    void create_interface_mesh()
+    {
+        ds.compute_node_sign(curve);
+        ds.find_cutted_edge(curve);
+        ds.create_interface_mesh();
+        //ds.print();
+    }
+
+    void write_to_vtk()
+    {
+        int rank = forest->mpirank;
+        int np = forest->mpisize;
+        std::ostringstream fileName;
+        fileName << "mesh";
+        ds.write_to_vtk(rank, np, fileName);
+    }
+
+
     void destroy_forest()
     {
         /* Destroy the p4est and the connectivity structure. */
@@ -476,6 +758,7 @@ public:
         if(ghost != NULL)
             ghost_destroy(ghost);
     }
+
 
 
     void to_vtk(const char *file)
@@ -521,8 +804,6 @@ public:
             auto NGC = mesh->ghost_num_quadrants;
             std::cout<< "Number of ghost on rank: " << forest->mpirank << " " << NGC << std::endl;
         }
-
-        ds.print();
     }
 
 private:
@@ -532,7 +813,7 @@ private:
     Nodes * nodes;
     Ghost * ghost;
     Mesh * mesh;
-    Level_set_function fun;
+    static Curve curve;
     QuadMeshDataStructure ds;
 };
 

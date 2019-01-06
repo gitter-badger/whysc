@@ -11,20 +11,16 @@ set(CMAKE_CXX_STANDARD 14)
 include_directories(${PROJECT_BINARY_DIR} ${PROJECT_SOURCE_DIR}/include)
 link_directories(${PROJECT_BINARY_DIR}/lib)
 
+
+
 # Set path for dependencies
 # TODO: make the code more flexible to find packages 
 set(CGAL_DIR  "/home/why/local")
 set(P4EST_DIR "/home/why/local")
+set(VTK_DIR "/home/why/local/lib/cmake/vtk-8.1")
 
 # MPI
 find_package(MPI REQUIRED)
-#if(MPI_C_FOUND)
-#    include_directories(${MPI_C_INCLUDE_PATH})
-#    link_directories(${MPI_C_LINK_FLAG})
-#    set(HAVE_MPI_C True)
-#else()
-#    set(HAVE_MPI_C False)
-#endif()
 if(MPI_CXX_FOUND)
     include_directories(${MPI_CXX_INCLUDE_PATH})
     link_directories(${MPI_CXX_LINK_FLAG})
@@ -63,6 +59,14 @@ else()
     set(HAVE_CGAL False)
     message(STATUS "Configure package without cgal!")
 endif()
+
+# VTK
+find_package(VTK REQUIRED)
+include(${VTK_USE_FILE})
+include_directories(${VTK_INCLUDE_DIRS})
+link_directories(${VTK_LIBRARIES_DIR})
+set(HAVE_VTK True)
+# VTK_LIBRARIES
 
 add_subdirectory(test)
 add_subdirectory(example)

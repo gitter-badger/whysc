@@ -6,6 +6,11 @@ namespace WHYSC {
 
 namespace GeoAlg {
 
+template <typename T> int sign(T val) 
+{
+    return (T(0) < val) - (val < T(0));
+}
+
 template<class GK> 
 class Bisection_alg
 {
@@ -26,9 +31,9 @@ public:
         Point_3 m = a + 0.5*(b - a); 
         double h = std::sqrt((b - a).squared_length());
 
-        int a_sign = fun.sign(a);
-        int b_sign = fun.sign(b);
-        int m_sign = fun.sign(m);
+        int a_sign = sign(fun(a));
+        int b_sign = sign(fun(b));
+        int m_sign = sign(fun(m));
         while(h > GK::eps())
         {
             if(m_sign == 0)
@@ -51,12 +56,12 @@ public:
     {
         Point_2 a = p1;
         Point_2 b = p2;
-        int a_sign = fun.sign(a);
-        int b_sign = fun.sign(b);
+        int a_sign = sign(fun(a));
+        int b_sign = sign(fun(b));
 
         double h = std::sqrt((b - a).squared_length());
         Point_2 m = midpoint(a,b); 
-        int m_sign = fun.sign(m);
+        int m_sign = sign(fun(m));
         while(h > GK::eps())
         {
             if(m_sign == 0)
@@ -77,7 +82,7 @@ public:
             h = std::sqrt((b - a).squared_length()); 
 
             m = midpoint(a,b); 
-            m_sign = fun.sign(m);
+            m_sign = sign(fun(m));
         }
 
         return m;

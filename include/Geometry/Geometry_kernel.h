@@ -102,8 +102,15 @@ template<class GK = Geometry_kernel_base<> >
 class Geometry_kernel:public GK
 {
 public:
+    typedef GK   Base;
+    typedef typename GK::Point_2 Point_2;
+    typedef typename GK::Point_3 Point_3;
+
     typedef GeoAlg::Bisection_alg<GK>  Bisection_algorithm;
     typedef GeoAlg::Delaunay_alg_2<GK> Delaunay_algorithm_2;
+    typedef double (*Curve_2)(const Point_2 & p);
+    typedef double (*Curve_3)(const Point_3 & p);
+
 
     typedef LevelSetFunction::Level_set_function<GK> Level_set_function;
     typedef LevelSetFunction::Circle<GK> Level_set_circle;

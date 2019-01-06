@@ -44,6 +44,7 @@ auto& quadrant_array_index = p4est_quadrant_array_index;
 
 auto& refine = p4est_refine;
 auto& partition = p4est_partition;
+auto& balance = p4est_balance;
 auto& vtk_write_file =  p4est_vtk_write_file;
 auto& qcoord_to_vertex = p4est_qcoord_to_vertex;
 auto& mesh_face_neighbor_init = p4est_mesh_face_neighbor_init;
