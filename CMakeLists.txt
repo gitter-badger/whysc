@@ -15,9 +15,9 @@ link_directories(${PROJECT_BINARY_DIR}/lib)
 
 # Set path for dependencies
 # TODO: make the code more flexible to find packages 
-set(CGAL_DIR  "/home/why/local")
-set(P4EST_DIR "/home/why/local")
-set(VTK_DIR "/home/why/local/lib/cmake/vtk-8.1")
+set(CGAL_DIR  "/usr/local")
+set(P4EST_DIR "/usr/local")
+set(VTK_DIR "/usr/local/lib/cmake/vtk-8.1")
 
 # MPI
 find_package(MPI REQUIRED)
@@ -37,11 +37,11 @@ if(P4EST_FOUND)
     include_directories(${P4EST_DIR}/include)
     link_directories(${P4EST_DIR}/lib)
     set(SC_LIBS sc)
-    set(P4EST_LIBS p4est sc ${MPI_CXX_LIBRARIES} gomp lapack cblas f77blas atlas z m)
+    set(P4EST_LIBS p4est sc ${MPI_CXX_LIBRARIES} gomp lapack z m)
     set(HAVE_P4EST True)
     message(STATUS "Configure package with p4est!")
 else()
-    set(HAVE_CGAL False)
+    set(HAVE_P4EST False)
     message(STATUS "Configure package without p4est!")
 endif()
 

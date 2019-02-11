@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <assert.h>
+#include "Vector.h"
 
 namespace WHYSC {
 namespace GeometryObject {
@@ -28,7 +29,52 @@ public:
 
     static int dimension() {return DIM;}
 
+    template<class Vector>
+    Point<F, DIM> & operator -= (const Vector & rhs)
+    {
+        for(int d = 0; d < DIM; d++)
+            this->data()[d] -= rhs[d];
+        return *this;
+    }
+
+    template<class Vector>
+    Point<F, DIM> & operator += (const Vector & rhs)
+    {
+        for(int d = 0; d < DIM; d++)
+            this->data()[d] += rhs[d];
+        return *this;
+    }
 };
+
+template<typename F, int DIM >
+inline Vector<F, DIM> operator - (const Point<F, DIM> & p,
+                         const Point<F, DIM> & q)
+{
+    Vector<F, DIM> v;
+    for(int d = 0; d < DIM; d++)
+        v[d] = p[d] - q[d];
+    return v;
+}
+
+template<typename F, int DIM>
+inline Point<F, DIM> operator + (const Point<F, DIM> & p,
+                        const Vector<F, DIM> & v)
+{
+    Point<F, DIM> q;
+    for(int d = 0; d < DIM; d++)
+        q[d] = p[d] + v[d]; 
+    return q;
+}
+
+template<typename F, int DIM>
+inline Point<F, DIM> operator - (const Point<F, DIM> & p,
+                        const Vector<F, DIM> & v)
+{
+    Point<F, DIM> q;
+    for(int d = 0; d < DIM; d++)
+        q[d] = p[d] - v[d]; 
+    return q;
+}
 
 template<typename F, int DIM>
 std::ostream& operator << (std::ostream & os, const Point<F, DIM> & p)
