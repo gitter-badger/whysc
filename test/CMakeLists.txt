@@ -20,4 +20,9 @@ if(HAVE_VTK)
     target_link_libraries(test_pwriter ${VTK_LIBRARIES})     
 endif()
 
+if(HAVE_OpenGL)
+    add_executable(test_opengl test_opengl.cpp)
+    target_link_libraries(test_opengl ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})     
+endif()
+
 add_executable(test_geo test_geo.cpp)

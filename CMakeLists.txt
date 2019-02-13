@@ -60,6 +60,18 @@ else()
     message(STATUS "Configure package without cgal!")
 endif()
 
+find_package(OpenGL REQUIRED)
+find_package(GLUT REQUIRED)
+if(OpenGL_FOUND)
+    include_directories( ${OPENGL_INCLUDE_DIRS}  ${GLUT_INCLUDE_DIRS} )
+    set(HAVE_OpenGL True)
+    message(STATUS "Configure package with OpenGL!")
+    #${OPENGL_LIBRARIES} ${GLUT_LIBRARY}
+else()
+    set(HAVE_OpenGL False)
+    message(STATUS "Configure package without OpenGL!")
+endif()
+
 # VTK
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
