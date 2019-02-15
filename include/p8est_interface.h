@@ -1,7 +1,9 @@
 #ifndef p8est_interface_h
 #define p8est_interface_h
 
+#include <p4est_to_p8est.h>
 #include <p8est.h>
+#include <p8est_extended.h>
 #include <p8est_balance.h>
 #include <p8est_connectivity.h>
 #include <p8est_ghost.h>
@@ -15,19 +17,22 @@ typedef p8est_connectivity_t Connectivity;
 typedef p8est_t              Forest;
 typedef p8est_tree_t         Tree;
 typedef p8est_quadrant_t     Quadrant;
-typedef p8est_topidx_t       Topidx;
-typedef p8est_locidx_t       Locidx;
-typedef p8est_qcoord_t       Qcoord;
+
+typedef p4est_topidx_t       Topidx;
+typedef p4est_locidx_t       Locidx;
+typedef p4est_qcoord_t       Qcoord;
+
 typedef p8est_nodes_t        Nodes;
-typedef p8est_mesh_t         Mesh;
+typedef p8est_mesh_t         PMesh;
 typedef p8est_ghost_t        Ghost;
 typedef p8est_mesh_face_neighbor_t  MFNeighbor;
 typedef sc_MPI_Comm          MPI_Comm;
 
-auto& connectivity_new_copy = p8est_connectivity_new_copy;
+auto& connectivity_new_copy = p4est_connectivity_new_copy;
 auto& connectivity_destroy = p8est_connectivity_destroy;
 
 auto& forest_new = p8est_new;
+auto& forest_new_ext = p8est_new_ext;
 auto& forest_destroy = p8est_destroy;
 
 auto& nodes_new = p8est_nodes_new;

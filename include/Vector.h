@@ -14,6 +14,7 @@ class Vector : public std::array<F, DIM>
 {
 public:
     typedef typename std::array<F, DIM> Base;
+
 public:
 
     Vector()
@@ -31,8 +32,8 @@ public:
     double squared_length()
     {
         double sum = 0.0;
-        for(int d = 0; d < DIM; d++)
-            sum += this->data()[d]*this->data()[d];
+        for(auto d:&this) 
+            sum += d*d;
         return sum;
     }
 

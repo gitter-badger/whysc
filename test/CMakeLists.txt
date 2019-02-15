@@ -5,6 +5,9 @@ if(HAVE_P4EST AND HAVE_CGAL)
 
     add_executable(test_interface_mesh_alg_2 test_interface_mesh_alg_2.cpp)
     target_link_libraries(test_interface_mesh_alg_2 ${P4EST_LIBS} ${CGAL_LIBS} ${VTK_LIBRARIES})
+
+    add_executable(test_interface_mesh_generator_3d test_interface_mesh_generator_3d.cpp)
+    target_link_libraries(test_interface_mesh_generator_3d ${P4EST_LIBS} ${VTK_LIBRARIES})
 endif()
 
 

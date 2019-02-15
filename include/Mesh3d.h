@@ -47,9 +47,14 @@ struct Mesh3d
 
     Int dim;
 
+
+    Mesh3d()
+    {
+    }
+
     /*function member*/
     template<typename NodeContainer, typename CellContainer>
-    Mesh3d(Int NN, Int NC, NodeContainer nc, CellContainer cc)
+    void init(Int NN, Int NC, NodeContainer nc, CellContainer cc)
     {// 初始化
 
         dim = 3;
@@ -69,7 +74,6 @@ struct Mesh3d
                 cells[i][j] = cc[V*i + j];
         }
         construct();
-
     }
 
     void construct()
@@ -193,10 +197,10 @@ struct Mesh3d
         return r;  
     }
 
-    Int number_of_cells() { return cells.size();}
     Int number_of_nodes() { return nodes.size();}
     Int number_of_edges() { return edges.size();}
     Int number_of_faces() { return faces.size();}
+    Int number_of_cells() { return cells.size();}
 
     void print()
     {

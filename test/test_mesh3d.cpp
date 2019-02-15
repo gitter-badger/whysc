@@ -56,10 +56,9 @@ int main(int argc, char **argv)
     int NN = 27;
     int NC = 8;
 
-    auto mesh = Mesh(NN, NC, node, cell);
+    auto mesh = Mesh();
+    mesh.init(NN, NC, node, cell);
     mesh.print();
-
-    std::array<int, 3> a = {0, 1, 2};
     return 0;
 }
 
