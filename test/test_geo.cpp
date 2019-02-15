@@ -1,8 +1,8 @@
 #include <iostream> 
 
-#include "Geometry_kernel.h"
+#include "GeometryKernel.h"
 
-typedef WHYSC::Geometry_kernel<double> GK;
+typedef WHYSC::GeometryKernel<double> GK;
 typedef GK::Point_2 Point_2;
 typedef GK::Point_3 Point_3;
 typedef GK::Vector_2 Vector_2;

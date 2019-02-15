@@ -1,15 +1,17 @@
-#ifndef Geometry_kernel_h
-#define Geometry_kernel_h
+#ifndef GeometryKernel_h
+#define GeometryKernel_h
 
 #include "Point.h"
 #include "Vector.h"
 
 namespace WHYSC {
 
-template<typename F=double>
-class Geometry_kernel
+template<typename F=double, typename I=int>
+class GeometryKernel
 {
 public:
+    typedef F Float;
+    typedef I Int;
     typedef typename GeometryObject::Point<F, 2> Point_2;
     typedef typename GeometryObject::Point<F, 3> Point_3;
     typedef typename GeometryObject::Vector<F, 2> Vector_2;

@@ -74,12 +74,23 @@ endif()
 
 # VTK
 find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
-include_directories(${VTK_INCLUDE_DIRS})
-link_directories(${VTK_LIBRARIES_DIR})
-set(HAVE_VTK True)
+if(VTK_FOUND)
+    include(${VTK_USE_FILE})
+    include_directories(${VTK_INCLUDE_DIRS})
+    link_directories(${VTK_LIBRARIES_DIR})
+    message(STATUS "Configure package with VTK!")
+    set(HAVE_VTK True)
+else()
+    set(HAVE_VTK False)
+    message(STATUS "Configure package without VTK!")
+endif()
 # VTK_LIBRARIES
+
+
+
+set(WHYSC_LIBRARIES whysc)
 
 add_subdirectory(test)
 add_subdirectory(example)
+#add_subdirectory(src)
 

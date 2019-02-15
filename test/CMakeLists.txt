@@ -7,7 +7,6 @@ if(HAVE_P4EST AND HAVE_CGAL)
     target_link_libraries(test_interface_mesh_alg_2 ${P4EST_LIBS} ${CGAL_LIBS} ${VTK_LIBRARIES})
 endif()
 
-add_executable(test_edges test_edges.cpp)
 
 if(HAVE_VTK)
     add_executable(test_vtk test_vtk.cpp)
@@ -25,4 +24,9 @@ if(HAVE_OpenGL)
     target_link_libraries(test_opengl ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})     
 endif()
 
+add_executable(test_edges test_edges.cpp)
 add_executable(test_geo test_geo.cpp)
+
+add_executable(test_mesh3d test_mesh3d.cpp)
+#add_executable(test_algebra test_algebra.cpp)
+#target_link_libraries(test_mesh3d ${WHYSC_LIBRARIES})     
