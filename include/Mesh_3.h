@@ -1,5 +1,5 @@
-#ifndef Mesh3d_h
-#define Mesh3d_h
+#ifndef Mesh_3_h
+#define Mesh_3_h
 
 #include <vector>
 #include <string>
@@ -20,7 +20,7 @@ namespace WHYSC {
 namespace Mesh {
 
 template<typename GK, typename Cell>
-struct Mesh3d
+struct Mesh_3
 {
     /*typename*/
     typedef typename GK::Float Float;
@@ -48,22 +48,27 @@ struct Mesh3d
     Int dim;
 
 
-    Mesh3d()
+    Mesh_3()
     {
+        dim = 3;
     }
 
     /*function member*/
     template<typename NodeContainer, typename CellContainer>
-    void init(Int NN, Int NC, NodeContainer nc, CellContainer cc)
+    void init(Int NN, Int NC, NodeContainer nc, CellContainer cc, Int * idx =NULL)
     {// 初始化
 
-        dim = 3;
-        nodes.resize(NN);
+        if(idx == NULL)
+        {
+            Int i0[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+            idx = i0;
+        }
 
-        for(auto i = 0 ; i < NN; i++)
-        { 
-            for(auto d = 0; d < dim; d++)
-                nodes[i][d] = nc[dim*i+d];
+        nodes.resize(NN);
+        for(auto i = 0; i < NN; i++)
+        {
+            for(auto j = 0; j < dim; j++)
+                nodes[i][j] = nc[dim*i +j];
         }
 
         cells.resize(NC);
@@ -71,7 +76,42 @@ struct Mesh3d
         {
             auto V = Cell::NV[dim];
             for(auto j = 0; j < V; j++)
-                cells[i][j] = cc[V*i + j];
+                cells[i][j] = cc[V*i + idx[j]];
+        }
+        construct();
+        return;
+    }
+
+    template<typename NodeContainer>
+    void set_nodes(Int NN, NodeContainer nc)
+    {
+        nodes.resize(NN);
+        for(auto i = 0; i < NN; i++)
+        {
+            for(auto j = 0; j < dim; j++)
+                nodes[i][j] = nc[dim*i +j];
+        }
+        return;
+    }
+
+    template<typename CellContainer>
+    void init(Int NN, Int NC, CellContainer cc, Int *idx = NULL)
+    {// 初始化
+
+        nodes.resize(NN);
+
+        if(idx == NULL)
+        {
+            Int i0[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+            idx = i0;
+        }
+
+        cells.resize(NC);
+        for(auto i = 0; i < NC; i++)
+        {
+            auto V = Cell::NV[dim];
+            for(auto j = 0; j < V; j++)
+                cells[i][j] = cc[V*i + idx[j]];
         }
         construct();
     }
@@ -244,4 +284,4 @@ struct Mesh3d
 } // end of namespace Mesh
 
 } // end of namespace WHYSC
-#endif // end of Mesh3d_h
+#endif // end of Mesh_3_h

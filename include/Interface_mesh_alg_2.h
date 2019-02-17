@@ -696,7 +696,7 @@ public:
             }
         }
 
-        // traverse all local trees, one process, one tree ?
+        // traverse all local trees, now one process, one tree
         auto tree = tree_array_index(forest->trees, forest->first_local_tree);
         auto quads = &tree->quadrants;
 

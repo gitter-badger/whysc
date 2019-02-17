@@ -20,6 +20,12 @@ if(HAVE_VTK)
 
     add_executable(test_pwriter test_pwriter.cpp)
     target_link_libraries(test_pwriter ${VTK_LIBRARIES})     
+
+    add_executable(test_vtkpolyhedron test_vtkpolyhedron.cpp)
+    target_link_libraries(test_vtkpolyhedron ${VTK_LIBRARIES})     
+
+    add_executable(test_vtkhexahedron test_vtkhexahedron.cpp)
+    target_link_libraries(test_vtkhexahedron ${VTK_LIBRARIES})     
 endif()
 
 if(HAVE_OpenGL)

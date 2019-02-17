@@ -25,3 +25,4 @@ an additional package dedicated to my C++ scientific computing program.
 * class_member_function
 * varNameExample
 * Class_name_example.h
+* package_interface.h

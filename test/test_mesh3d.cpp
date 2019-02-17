@@ -2,12 +2,12 @@
 #include <array> 
 
 #include "Hexahedron.h"
-#include "Mesh3d.h"
-#include "GeometryKernel.h"
+#include "Mesh_3.h"
+#include "Geometry_kernel.h"
 
-typedef WHYSC::GeometryKernel<double, int> GK;
+typedef WHYSC::Geometry_kernel<double, int> GK;
 typedef WHYSC::Mesh::Hexahedron Hex;
-typedef WHYSC::Mesh::Mesh3d<GK, Hex> Mesh;
+typedef WHYSC::Mesh::Mesh_3<GK, Hex> Mesh;
 
 int main(int argc, char **argv)
 {

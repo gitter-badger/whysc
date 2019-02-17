@@ -50,28 +50,29 @@ int Hexahedron::NV[4] = {1, 2, 4, 8}; // 0d entity with 1 vertex; 1d entity with
 int Hexahedron::ND[4] = {8, 12, 6, 1};// 8 vertices, 12 edges, 6 faces, 1 cell
 CellType Hexahedron::type = HEXAHEDRON;
 
-int Hexahedron::edge[12][2] = {
-    {0, 1}, {2, 3}, {0, 2}, {1, 3},
-    {0, 4}, {1, 5}, {2, 6}, {3, 7},
-    {4, 5}, {6, 7}, {4, 6}, {5, 7}
+int Hexahedron::face[6][4] = {
+    {0, 4, 7, 3}, {1, 2, 6, 5},  // left and right faces
+    {0, 1, 5, 4}, {2, 3, 7, 6},  // front and back faces
+    {0, 3, 2, 1}, {4, 5, 6, 7},   // bottom and top faces
 };
 
-int Hexahedron::face[6][4] = {
-    {4, 6, 0, 2}, {1, 3, 5, 7},  // left and right faces
-    {0, 1, 4, 5}, {6, 7, 2, 3},  // front and back faces
-    {4, 5, 6, 7}, {2, 3, 0, 1},  // bottom and top faces
+int Hexahedron::edge[12][2] = {
+    {0, 1}, {1, 2}, {2, 3}, {0, 3},
+    {0, 4}, {1, 5}, {2, 6}, {3, 7},
+    {4, 5}, {5, 6}, {6, 7}, {4, 7}
 };
+
 
 int Hexahedron::face2edge[6][4] = {
-    {10, 2, 4,  6}, {3, 11, 5, 7},
-    { 0, 8, 4,  5}, {9,  1, 6, 7},
-    { 8, 9,10, 11}, {1,  0, 2, 3}, 
+    {4, 11, 7, 3}, {1, 6,  9,  5},
+    {0,  5, 8, 4}, {2, 7, 10,  6},
+    {3,  2, 1, 0}, {8, 9, 10, 11},  
 };
 
 int Hexahedron::edge2face[12][2] = {
-    {2, 5}, {5, 3}, {0, 5}, {1, 5},
-    {0, 2}, {2, 1}, {3, 0}, {1, 3},
-    {4, 2}, {3, 4}, {0, 4}, {4, 1}
+    {2, 4}, {1, 4}, {3, 4}, {4, 0},
+    {0, 2}, {2, 1}, {1, 3}, {3, 0},
+    {5, 2}, {5, 1}, {5, 3}, {0, 5}
 };
 
 std::ostream& operator << (std::ostream & os, const Hexahedron & cell)
