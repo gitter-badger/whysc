@@ -33,6 +33,7 @@ if(HAVE_OpenGL)
     target_link_libraries(test_opengl ${OPENGL_LIBRARIES} ${GLUT_LIBRARY})     
 endif()
 
+add_executable(test_array test_array.cpp)
 add_executable(test_edges test_edges.cpp)
 add_executable(test_geo test_geo.cpp)
 

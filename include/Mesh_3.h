@@ -60,8 +60,16 @@ struct Mesh_3
 
         if(idx == NULL)
         {
-            Int i0[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-            idx = i0;
+            if(Cell::type == HEXAHEDRON)
+            {
+                Int i0[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+                idx = i0;
+            }
+            else if(Cell::type == TETRA)
+            {
+                Int i0[4] = {0, 1, 2, 3};
+                idx = i0;
+            }
         }
 
         nodes.resize(NN);
@@ -102,8 +110,16 @@ struct Mesh_3
 
         if(idx == NULL)
         {
-            Int i0[8] = {0, 1, 2, 3, 4, 5, 6, 7};
-            idx = i0;
+            if(Cell::type == HEXAHEDRON)
+            {
+                Int i0[8] = {0, 1, 2, 3, 4, 5, 6, 7};
+                idx = i0;
+            }
+            else if(Cell::type == TETRA)
+            {
+                Int i0[4] = {0, 1, 2, 3};
+                idx = i0;
+            }
         }
 
         cells.resize(NC);

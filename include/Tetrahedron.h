@@ -46,15 +46,15 @@ int Tetrahedron::NV[4] = {1, 2, 3, 4};
 int Tetrahedron::ND[4] = {4, 6, 4, 1};
 CellType Tetrahedron::type = TETRA;
 
-int Tetrahedron::localEdge[6][2] = {
+int Tetrahedron::edge[6][2] = {
     {0, 1}, {0, 2}, {0, 3}, {1, 2}, {1, 3}, {2, 3}
 };
 
-int Tetrahedron::localFace[4][3] = {
+int Tetrahedron::face[4][3] = {
     {1, 2, 3}, {0, 3, 2}, {0, 1, 3}, {0, 2, 1}
 };
 
-int Tetrahedron::localFace2edge[4][3] = {
+int Tetrahedron::face2edge[4][3] = {
     {5, 4, 3}, {5, 1, 2}, {4, 2, 0}, {3, 0, 1}
 };
 

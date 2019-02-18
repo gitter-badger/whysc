@@ -26,6 +26,7 @@ enum CellType
   PYRAMID          = 14,
   PENTAGONAL_PRISM = 15,
   HEXAGONAL_PRISM  = 16,
+  POLYGON_FACE     = 17,
 
   // Quadratic, isoparametric cells
   QUADRATIC_EDGE                   = 21,
@@ -82,6 +83,7 @@ enum CellType
 
   NUMBER_OF_CELL_TYPES
 };
+
 } // end of namespace Mesh
 
 } // end of namespace WHYSC
