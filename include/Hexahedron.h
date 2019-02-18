@@ -1,5 +1,5 @@
-#ifndef cells_h
-#define cells_h
+#ifndef Hexahedron_h
+#define Hexahedron_h
 
 #include <array>
 #include <utility>
@@ -8,12 +8,12 @@
 namespace WHYSC {
 namespace Mesh {
 
-
 struct Hexahedron
 {
     typedef std::array<int, 2> Edge;
     typedef std::array<int, 4> Face;
     typedef std::pair<int, Face> IFace;
+    typedef std::pair<int, Edge> IEdge;
     typedef std::array<int, 6> Cell2cell;
     typedef std::array<int, 6> Cell2face;
     typedef std::array<int, 12> Cell2edge;
@@ -90,4 +90,4 @@ std::ostream& operator << (std::ostream & os, const Hexahedron & cell)
 } // end of namespace Mesh
 
 } // end of namespace WHYSC
-#endif // end of cells_h
+#endif // end of Hexahedron_h

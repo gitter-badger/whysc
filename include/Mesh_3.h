@@ -15,6 +15,9 @@
 #include <iostream>
 #include <fstream>
 
+
+#include "mesh_utility.h"
+
 namespace WHYSC {
 
 namespace Mesh {
@@ -29,6 +32,7 @@ struct Mesh_3
     typedef typename Cell::Edge Edge;
     typedef typename Cell::Face Face;
     typedef typename Cell::IFace IFace;
+    typedef typename Cell::IEdge IEdge;
     typedef typename Cell::Cell2cell Cell2cell;
     typedef typename Cell::Cell2face Cell2face;
     typedef typename Cell::Cell2edge Cell2edge;
@@ -86,7 +90,8 @@ struct Mesh_3
             for(auto j = 0; j < V; j++)
                 cells[i][j] = cc[V*i + idx[j]];
         }
-        construct();
+        construct_faces();
+        construct_edges();
         return;
     }
 
@@ -107,7 +112,6 @@ struct Mesh_3
     {// 初始化
 
         nodes.resize(NN);
-
         if(idx == NULL)
         {
             if(Cell::type == HEXAHEDRON)
@@ -129,22 +133,39 @@ struct Mesh_3
             for(auto j = 0; j < V; j++)
                 cells[i][j] = cc[V*i + idx[j]];
         }
-        construct();
+        construct_faces();
+        construct_edges();
     }
 
-    void construct()
+    static bool FaceLess(const Face & f0, const Face& f1)
+    {
+        for(auto i = 0; i < f0.size(); i++)
+        {
+            if(f0[i] < f1[i])
+            {
+                return true;
+            }
+            else if(f0[i] == f1[i])
+            {
+                continue;
+            }
+            else
+                return false;
+        }
+    }
+
+    void construct_faces()
     {// 重建拓扑关系数组
         auto NC = cells.size();
-        std::vector<IFace> totalFaces(Cell::ND[dim-1]*NC);
+        std::vector<IFace> totalFaces(Cell::ND[2]*NC);
         Int k = 0;
         for(auto i = 0; i < NC; i++)
         {
             auto & cell = cells[i];
-            for(auto j = 0; j < Cell::ND[dim-1]; j ++)
+            for(auto j = 0; j < Cell::ND[2]; j ++)
             {
                 totalFaces[k].first = k;
-                
-                for(auto m = 0; m < Cell::NV[dim-1]; m++)
+                for(auto m = 0; m < Cell::NV[2]; m++)
                 {
                     auto n = Cell::face[j][m];
                     totalFaces[k].second[m] = cell[n];
@@ -156,27 +177,25 @@ struct Mesh_3
         // sort the `totalFaces`
         auto sort = [](IFace & f){std::sort(f.second.begin(), f.second.end());};
         std::for_each(totalFaces.begin(), totalFaces.end(), sort);
-        std::sort(totalFaces.begin(), totalFaces.end(), Less);
+        std::sort(totalFaces.begin(), totalFaces.end(), FaceLess);
 
         std::list<Int> i0;
         std::list<Int> i1;
-        int i = 0;
+        Int i = 0;
         for(; i < totalFaces.size() - 1; i++)
         {
-            auto & idx0 = totalFaces[i].first;
-            i0.push_back(idx0);
+            i0.push_back(totalFaces[i].first);
 
             auto & face0 = totalFaces[i].second;
             auto & face1 = totalFaces[i+1].second;
             if(Equal(face0, face1))
             {
-                auto & idx1 = totalFaces[i+1].first;
-                i1.push_back(idx1);
+                i1.push_back(totalFaces[i+1].first);
                 i++;
             }
             else
             {
-                i1.push_back(idx0);
+                i1.push_back(totalFaces[i].first);
             }
         }
         // process the last face in totalFaces 
@@ -186,7 +205,6 @@ struct Mesh_3
             i0.push_back(idx);
             i1.push_back(idx);
         }
-        
         // i0 and i1 should have the same size
         assert(i0.size() == i1.size());
 
@@ -220,18 +238,15 @@ struct Mesh_3
         }
     }
 
-    static bool Less(const IFace& f0, const IFace& f1)
+    static bool EdgeLess(const Edge & e0, const Edge& e1)
     {
-        auto & face0 = f0.second;
-        auto & face1 = f1.second;
-
-        for(auto i = 0; i < face0.size(); i++)
+        for(auto i = 0; i < e0.size(); i++)
         {
-            if(face0[i] < face1[i])
+            if(e0[i] < e1[i])
             {
                 return true;
             }
-            else if(face0[i] == face1[i])
+            else if(e0[i] == e1[i])
             {
                 continue;
             }
@@ -240,18 +255,58 @@ struct Mesh_3
         }
     }
 
-    static bool Equal(const Face & f0, const Face & f1)
-    {
-        bool r = true;
-        for(auto i=0; i < f0.size(); i++)
+    void construct_edges()
+    {/*construct the unique edges*/
+        auto NC = cells.size();
+        std::vector<IEdge> totalEdges(Cell::ND[1]*NC);
+        Int k = 0;
+        for(auto i = 0; i < NC; i++)
         {
-            if(f0[i] != f1[i])
-                return false;
-            else
-                continue;
+            auto & cell = cells[i];
+            for(auto j = 0; j < Cell::ND[1]; j++)
+            {
+                totalEdges[k].first = k;
+                
+                for(auto m = 0; m < Cell::NV[1]; m++)
+                {
+                    auto n = Cell::edge[j][m];
+                    totalEdges[k].second[m] = cell[n];
+                }
+                ++k;
+            }
         }
-        return r;  
+
+        // sort the `totalEdges`
+        auto sort = [](IEdge & e){std::sort(e.second.begin(), e.second.end());};
+        std::for_each(totalEdges.begin(), totalEdges.end(), sort);
+        std::sort(totalEdges.begin(), totalEdges.end(), EdgeLess);
+
+        std::list<IEdge> es; 
+        es.push_back(totalEdges[0]);
+
+        Int i = 0;
+        Int idx = totalEdges[0].first;
+        cell2edge[idx/Cell::ND[1]][idx%Cell::ND[1]] = i;
+        for(auto j = 1; j < totalEdges.size(); j++)
+        {
+            auto & e0 = totalEdges[j-1].second;
+            auto & e1 = totalEdges[j].second;
+            if(!Equal(e0, e1))
+            {
+                es.push_back(totalEdges[j]);
+                i++;
+            }
+            idx = totalEdges[j].first;
+            cell2edge[idx/Cell::ND[1]][idx%Cell::ND[1]] = i;
+        }
+
+        edges.resize(es.size());
+        for(auto& e:es)
+        {
+            edges.push_back(e.second);
+        }
     }
+
 
     Int number_of_nodes() { return nodes.size();}
     Int number_of_edges() { return edges.size();}
@@ -291,6 +346,16 @@ struct Mesh_3
         {
             std::cout << i++ << ": ";
             for(auto & idx:f2c)
+                std::cout << idx << ", ";
+            std::cout << std::endl;
+        }
+
+        std::cout << "The edges:" << std::endl;
+        i = 0;
+        for(auto & e : edges)
+        {
+            std::cout << i++ << ": ";
+            for(auto & idx : e)
                 std::cout << idx << ", ";
             std::cout << std::endl;
         }

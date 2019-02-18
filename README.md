@@ -1,4 +1,4 @@
-# WHYSC: WeiHuaYi's Scientific Computing Package
+# WHYSC: WeiHuaYi's Scientific Computing Package in C++
 
 I have developed a Python finite element package FEALPy, but I found that I also need
 an additional package dedicated to my C++ scientific computing program.
@@ -16,7 +16,7 @@ an additional package dedicated to my C++ scientific computing program.
 * 面向对象
 * 模板
 * 尽量只采用标准的 CPP 库
-* 避免过度设计
+* 避免过度设计 !!
 
 # 命名规则
 
