@@ -1,5 +1,7 @@
 # WHYSC: WeiHuaYi's Scientific Computing Package in C++
 
+[![Join the chat at https://gitter.im/whysc/community](https://badges.gitter.im/whysc/community.svg)](https://gitter.im/whysc/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 I have developed a Python finite element package FEALPy, but I found that I also need
 an additional package dedicated to my C++ scientific computing program.
 
